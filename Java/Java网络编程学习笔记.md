@@ -420,3 +420,95 @@ public class ServerTest {
 ​		*DatagramPacket* 对象封装了UDP 数据包，在数据包中包含了发送端的 IP地址 和 端口号，以及接收端的 IP地址 和 端口号。
 
 ​		UDP协议中每个数据包都给出了完整的地址信息，因此无须建立发送方和接收方的连接。
+
+
+
+![UDP网络编程通信示意](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/UDP网络编程通信示意.png)
+
+1. 没有明确的服务端和客户端，演变成数据的发送端和接收端。
+2. 接收数据和发送数据是通过 *DatagramSocket* 对象完成的。
+3. 将数据封装到 *DatagramPacket* 对象/装包，接收到该对象则需要进行 拆包。
+4. *DatagramSocket* 可以指定在哪个端口接收数据。
+
+
+
+## 5.1、发送Hello UDP
+
+```java 
+/**
+ * @author Aip
+ * @description UDP网络编程 发送信息
+ */
+public class SendTest {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        System.out.println("=============发送端启动===========");
+        // 1.创建发送端对象
+        DatagramSocket socket = new DatagramSocket(6666);
+
+        // 2.创建一个数据包对象封装数据
+        /**
+         * 参数1:封装要发送的数据
+         * 参数2:发送数据的大小
+         * 参数3:服务端的IP地址
+         * 参数4:服务端的端口
+         *
+         * InetAddress.getLocalHost() 获取本机IP地址
+         */
+        byte[] buffer = "我是一坨数据!".getBytes();
+        DatagramPacket packet = new DatagramPacket(buffer,buffer.length, InetAddress.getLocalHost(),7684);
+
+        // 3.发送数据
+        socket.send(packet);
+
+        //设置一个延时，不然接收不到，可能是关太快了？？？？
+        Thread.sleep(1000);
+
+        // 4.关闭管道
+        socket.close();
+    }
+}
+```
+
+
+
+```java
+/**
+ * @author Aip
+ * @description UDP网络编程 接收信息
+ */
+public class ReceiveTest {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        System.out.println("=============客户端启动===========");
+
+        // 1.创建接受对象
+        DatagramSocket socket = new DatagramSocket(7684);
+
+        // 2.创建一个数据包接收数据
+        byte [] buffer = new byte[1024];
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+        // 3.等待接受数据
+        socket.receive(packet);
+
+        // 4.取出数据
+        String rs = new String(buffer,0,packet.getLength());
+        System.out.println("收到的数据:" + rs);
+        // 获取发送端的ip和端口
+        String ip = packet.getSocketAddress().toString();
+        System.out.println("发送端的IP地址: " + ip);
+
+        int port = packet.getPort();
+        System.out.println("发送端端口为: "+port);
+
+        // 关闭管道
+        socket.close();
+    }
+}
+```
+
+
+
+> 可参考http://t.csdnimg.cn/XowCi
+>
+> 另外在发送数据时，需要加一个休眠，不然接收不到。暂不清楚原因。
+
