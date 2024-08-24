@@ -3,7 +3,7 @@
 > - [学习JavaScript这一篇就够了](https://caochenlei.blog.csdn.net/article/details/109257751)
 > - [【狂神说Java】JavaScript最新教程通俗易懂](https://www.bilibili.com/video/BV1JJ41177di/?share_source=copy_web&vd_source=f8340c4026115fdc3a178ce1879c37ab)
 
-# 1、JavaScript简介	
+# 1、JavaScript简介
 
 JavaScript 是一种轻量级、解释型或即时编译型的编程语言，具有函数优先的特性。它是Web开发的核心技术之一，与HTML和CSS共同构成了现代Web应用的三大基石。其源代码在发往客户端之前不需要结果编译，而是将文本格式的字符代码发送给浏览器，由浏览器解释运行。
 
