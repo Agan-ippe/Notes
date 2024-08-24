@@ -1,6 +1,6 @@
 > 参考：
 >
-> - [学习JavaScript这一篇就够了](http://t.csdnimg.cn/kmXTM)
+> - [学习JavaScript这一篇就够了](https://caochenlei.blog.csdn.net/article/details/109257751)
 > - [【狂神说Java】JavaScript最新教程通俗易懂](https://www.bilibili.com/video/BV1JJ41177di/?share_source=copy_web&vd_source=f8340c4026115fdc3a178ce1879c37ab)
 
 # 1、JavaScript简介	
