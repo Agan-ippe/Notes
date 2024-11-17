@@ -1123,7 +1123,7 @@ sz和rz命令都需要下载 lrzsz 包
 
 
 
-# 、Linux快捷键
+# 16、Linux快捷键
 
 ~~~bash
 CTRL+c		#强制退出，也可以退出当前命令的输入
@@ -1140,17 +1140,13 @@ CTRL+→		#向右跳一个单词
 
 
 
-# 、查找命令的程序文件
+# 17、查找命令的程序文件
 
 which命令：作用就是找到Linux命令的程序文件的位置
 
 ![image-20241017172242630](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20241017172242630.png)
 
 
-
-# 、随手小记
-
-## 、端口
 
 
 
