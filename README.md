@@ -27,6 +27,18 @@
 
 
 
+# 数据库
+
+- Redis快速上手
+
+
+
+# Linux
+
+- Linux常用命令大全
+
+
+
 # 前端部分
 
 - JavaScript
