@@ -1813,7 +1813,7 @@ public void testPage(){
 >
 > Cause: org.apache.ibatis.builder.BuilderException: Error parsing SQL Mapper Configuration. Cause: java.io.IOException: Could not find resource mapper/UserMapper.xml
 
-![1683435296094](C:\Users\93988\Desktop\studynotes\学习笔记\SSM\MyBatis\Imgs\1683435296094.png)
+![1683435296094](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/202412021636870.png)
 
 问题来源是`mybatis-config.xml`配置文件中的`UserMapper`路径写错了导致的。
 
@@ -1843,7 +1843,7 @@ public void testPage(){
 >
 > 解决办法：将接口中的查询方法，改成List集合，用集合接收多条查询结果即可。
 
-![1684469239102](C:\Users\93988\Desktop\studynotes\学习笔记\SSM\MyBatis\Imgs\1684469239102.png)
+![1684469239102](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/202412021636883.png)
 
 ```Java
 User checkLoginByParam(@Param("name") String userName, @Param("pwd") String password);
