@@ -7,6 +7,26 @@
 
 JavaScript 是一种轻量级、解释型或即时编译型的编程语言，具有函数优先的特性。它是Web开发的核心技术之一，与HTML和CSS共同构成了现代Web应用的三大基石。其源代码在发往客户端之前不需要结果编译，而是将文本格式的字符代码发送给浏览器，由浏览器解释运行。
 
+> 与java方法对比
+
+~~~java
+ //java方法
+public String hello(String name){
+    return "hello to" +name;
+}
+~~~
+
+~~~javascript
+//JavaScript方法
+function hello(num1,num2,name) {
+    if (num1>num2){
+        return "hello to"+name;
+    }else {
+        alert("HELLO");
+    }
+}
+~~~
+
 
 
 ## 1.1、JavaScript的使用
