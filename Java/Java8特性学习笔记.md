@@ -854,3 +854,21 @@ public void demo10() {
         System.out.println(sum);
     }
 ```
+
+
+
+# 3、Optional
+
+​		可选类，用于代替`if`解决空指针异常。
+
+~~~java
+public void method(){
+	tagNameSet = Optional.ofNullable(tagNameSet).orElse(new HashSet<>());
+    // 拆分如下
+	// 如果tagNameSet不为null，则创建一个包含tagNameSet的Optional对象；如果tagNameSet为null，则创建一个空的Optional对象
+	Optional<Set<String>> optionalTagNameSet = Optional.ofNullable(tagNameSet);
+
+	// 如果Optional对象包含值（即tagNameSet不为null），则返回这个值；如果Optional对象为空（即tagNameSet为null），则返回一个新的HashSet对象
+	Set<String> tagNameSet = optionalTagNameSet.orElse(new HashSet<>());
+}
+~~~

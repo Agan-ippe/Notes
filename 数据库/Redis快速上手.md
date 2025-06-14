@@ -12,6 +12,8 @@ Redis的优点
 - 基于内存存储，读写性能高
 - 适合存储热点数据，使用频繁且量少
 
+**<font color="red">Redis 内存不能无限增加，一定要设置过期时间。否则Redsi会随机删除数据</font>**
+
 
 
 [学习Redis点我](https://redis.com.cn/)。
@@ -110,3 +112,55 @@ Zset存储的是有序集合。常用命令如下：
 | type key             | 返回 key 所储存的值的类型               |
 | rename key newkey    | 改名字                                  |
 
+
+
+# 8、Redis在Java中的实现
+
+- Spring Data Redis
+- Jedis
+- Redission
+
+
+
+## Spring Data Redis（推荐)
+
+引入依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+    <version>你需要的版本</version>
+</dependency>
+```
+
+配置文件
+
+```yml
+spring:
+  redis:
+    port: 6379
+    host: 你部署Reids的ip
+    password: 你设置的密码
+    database: 0
+```
+
+```Java
+@SpringBootTest
+public class RedisTest {
+
+    @Resource
+    private RedisTemplate redisTemplate;
+
+    @Test
+    void useRedis(){
+        // 操作字符串
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        valueOperations.set("haha","哈哈");
+        System.out.println(valueOperations.get("haha"));
+        // 操作列表
+        ListOperations listOperations = redisTemplate.opsForList();
+        // ...其他操作以此类推
+    }
+}
+```
