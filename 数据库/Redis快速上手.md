@@ -117,8 +117,9 @@ Zset存储的是有序集合。常用命令如下：
 # 8、Redis在Java中的实现
 
 - Spring Data Redis
-- Jedis
-- Redission
+- Jedis（独立于Spring操作 Redis 的Java客户端，非Spring项目可用）
+- Redission（分布式操作 Redis 的Java客户端）
+- Lettcue（高阶版）
 
 
 
