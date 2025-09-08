@@ -37,9 +37,22 @@
 
 
 
+# 中间件
+
+- RabbitMQ（即将更新）
+
+
+
 # Linux
 
 - Linux常用命令大全
+
+
+
+# 杂项
+
+- SpringBoot整合knife4j+Swagger接口文档配置文件
+- 开发小技巧（持续更新）
 
 
 
