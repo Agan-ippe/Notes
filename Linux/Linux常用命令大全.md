@@ -1166,3 +1166,23 @@ which命令：作用就是找到Linux命令的程序文件的位置
 
 
 
+~~~shell
+sudo vim /etc/ssh/sshd_config
+
+systemctl status firewalld
+firewall-cmd --permanent --add-port=3622/tcp
+sudo firewall-cmd --reload 
+semanage port -a -t ssh_port_t -p tcp 3622
+systemctl restart sshd
+sudo semanage port -a -t ssh_port_t -p tcp 3622
+sudo systemctl restart sshd
+# 1、开放redis的6379端口【假设redis端口为6379】
+firewall-cmd --zone=public --add-port=6379/tcp --permanent
+
+# 2、重启防火墙使得配置生效
+systemctl restart firewalld
+
+# 3、查看系统所有开放的端口
+firewall-cmd --zone=public --list-ports
+~~~
+
