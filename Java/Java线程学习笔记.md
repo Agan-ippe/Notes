@@ -612,7 +612,176 @@ public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier)
 
 ​		线程池就是首先创建一些线程，它们的集合称为线程池，使用线程池可以很好的提高性能，线程池在系统启动的时候创建了大量的空闲的线程。程序将一个任务传给线程池，线程池就会启动一个线程来执行这个任务，执行任务结束后，该线程不会消亡，而是返回线程池中状态为更新为空闲，等待执行下一个任务。
 
-## 7.1、线程池的使用
+
+
+## 7.1、线程池实现类（重要）
+
+线程池实现类 `ThreadPoolExecutor` 是 `Executor` 框架最核心的类。
+
+
+
+### 7.1.1、参数分析
+
+```Java
+/**
+ * Throws:
+ * IllegalArgumentException – 一下任意一条成立: 
+ * corePoolSize < 0 
+ * keepAliveTime < 0 
+ * maximumPoolSize <= 0 
+ * maximumPoolSize < corePoolSize
+ * NullPointerException – 如果 workQueue 或 handler 参数为 null
+*/
+public ThreadPoolExecutor(int corePoolSize,		// 核心线程数
+                          int maximumPoolSize,	// 最大线程数
+                          long keepAliveTime,	// 非核心线程 的 最大存活时间
+                          TimeUnit unit,		// 时间单位
+                          BlockingQueue<Runnable> workQueue,	//任务队列，用来存储等待执行任务的线程
+                          ThreadFactory threadFactory,			//线程工厂，用来创建线程，一般默认即可
+                          RejectedExecutionHandler handler		//拒绝策略，当提交的任务过多而不能及时处理时，我们可以定制策略来处理任务
+                         ) {
+    this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
+         Executors.defaultThreadFactory(), handler);
+}
+```
+
+最重要的三个参数：
+
+- `corePoolSize`：相当于常驻员工，任务队列未达到队列容量时，最大可以同时运行的线程数量。
+- `maximunPoolSize`：相当于紧急加班员工，任务队列中存放的任务达到队列容量的时候，当前可以同时运行的线程数量变为最大线程数。
+- `workQueue`：新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到的话，新任务就会被存放在队列中。存在一个队列长度（一定要设置，不可为无限，因为队列长度会占用资源）
+
+其他参数：
+
+- `keepAliveTime`：线程池中的线程数量 大于 `corePoolSize` 的时候，如果没有新的任务提交，核心线程数外的线程，将会在 `keepAliveTime` 之后销毁。
+- `unit`：`keepAliveTime` 的时间单位。
+- `threadFactory` :executor 创建新线程的时候会用到。
+- `handler`：拒绝策略,任务队列已满时，采取的某些措施，比如是否抛异常、自定义策略（详情见下文 [7.1.2](#7.1.2、四种内置的拒绝策略)）
+
+
+
+![image-20251101155400992](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251101155400992.png)
+
+### 7.1.2、四种内置的拒绝策略
+
+`ThreadPoolExecutor` 内置有4中拒绝策略
+
+1. `AbortPolicy`：（默认策略）抛出 `RejectedExecutionException`来拒绝新任务的处理。
+
+   ```Java
+   public static class AbortPolicy implements RejectedExecutionHandler {
+       public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+           throw new RejectedExecutionException("Task " + r.toString() +
+                                                " rejected from " +
+                                                e.toString());
+       }
+   }
+   ```
+
+   直接抛出 `RejectedExecutionException`。
+
+   适用场景：对任务丢失零容忍，希望快速失败暴露问题。
+
+   
+
+2. `CallerRunsPolicy`：调用执行自己的线程运行任务，也就是直接在调用`execute`方法的线程中运行(`run`)被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。如果您的应用程序可以承受此延迟并且你要求任何一个任务请求都要被执行的话，你可以选择这个策略。
+
+   ~~~Java
+   public static class CallerRunsPolicy implements RejectedExecutionHandler {
+       public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+           if (!e.isShutdown()) {
+               // 直接主线程执行，而不是线程池中的线程执行
+               r.run();
+           }
+       }
+   }
+   ~~~
+
+   
+
+3. `DiscardPolicy`：不处理新任务，直接丢弃掉。
+
+   ```Java
+   public static class DiscardPolicy implements RejectedExecutionHandler {
+       public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+           // 不做如何处理，无日志、无异常
+       }
+   }
+   ```
+
+   
+
+4. `DiscardOldestPolicy`：此策略将丢弃最早的未处理的任务请求。
+
+   ```Java
+   public static class DiscardOldestPolicy implements RejectedExecutionHandler {
+       public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+           if (!e.isShutdown()) {
+               e.getQueue().poll();	//丢弃头部最老的任务
+               e.execute(r);			//重试提交当前的任务
+           }
+       }
+   }
+   ```
+
+   
+
+### 7.1.3、自定义策略
+
+在生产环境中，我们往往需要**记录日志、上报监控、降级处理**等操作。这时可实现自己的 `RejectedExecutionHandler`。
+
+> 示例
+
+~~~Java
+public class LoggingRejectedExecutionHandler implements RejectedExecutionHandler {
+    private static final Logger log = LoggerFactory.getLogger(LoggingRejectedExecutionHandler.class);
+
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        // 1. 记录关键信息
+        log.warn("Task rejected - poolSize: {}, active: {}, queueSize: {}, task: {}",
+                executor.getPoolSize(),
+                executor.getActiveCount(),
+                executor.getQueue().size(),
+                r.getClass().getSimpleName());
+
+        // 2. 上报指标（如 Micrometer / Prometheus）
+        Metrics.counter("threadpool.rejected").increment();
+
+        // 3. 可选：尝试降级（如写入本地磁盘队列、发送到备用队列）
+        // fallbackToDiskQueue(r);
+
+        // 4. 默认行为：抛出异常（或静默丢弃，根据业务决定）
+        throw new RejectedExecutionException("Task rejected due to thread pool saturation");
+    }
+}
+~~~
+
+> 使用
+
+~~~Java
+ThreadPoolExecutor executor = new ThreadPoolExecutor(
+    2, 4,
+    60L, TimeUnit.SECONDS,
+    new LinkedBlockingQueue<>(10),
+    new LoggingRejectedExecutionHandler() // 自定义拒绝策略
+);
+~~~
+
+
+
+
+
+## 7.2、创建线程池的两种方式
+
+在 Java 中，创建线程池主要有两种方式：
+
+1. **通过 `ThreadPoolExecutor` 构造函数直接创建 (推荐)**（详细可见  [7.1.1、参数分析](#7.1.1、参数分析)  或 自行阅读源码）
+2. 通过 `Executors` 工具类创建 (不推荐用于生产环境)（且阿里巴巴Java开发手册强制要求，不允许使用这种方式创建线程池）
+
+
+
+## 7.3、Executors工具类创建线程池
 
 > newCachedThreadPool
 
@@ -638,9 +807,22 @@ public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier)
 
 
 
+```Java
+public class ThreadPoolDemo {
+    public static void main(String[] args) {
+        // 创建一个核心线程数和最大线程数相同的线程池
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
+        executorService.execute(() -> System.out.println("this is fixed thread pool"));
 
-
-
-
-
-
+        // 创建一个单线程的线程池
+        ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
+        singleExecutor.execute(() -> System.out.println("this is single thread pool"));
+        // 创建一个缓存线程池
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        cachedThreadPool.execute(() -> System.out.println("this is cached thread pool"));
+        // 创建一个定时线程池
+        ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(4);
+        scheduledThreadPool.schedule(() -> System.out.println("this is scheduled thread pool"), 2, TimeUnit.SECONDS);
+    }
+}
+```
