@@ -656,13 +656,28 @@ public ThreadPoolExecutor(int corePoolSize,		// 核心线程数
 - `keepAliveTime`：线程池中的线程数量 大于 `corePoolSize` 的时候，如果没有新的任务提交，核心线程数外的线程，将会在 `keepAliveTime` 之后销毁。
 - `unit`：`keepAliveTime` 的时间单位。
 - `threadFactory` :executor 创建新线程的时候会用到。
-- `handler`：拒绝策略,任务队列已满时，采取的某些措施，比如是否抛异常、自定义策略（详情见下文 [7.1.2](#7.1.2、四种内置的拒绝策略)）
+- `handler`：拒绝策略,任务队列已满时，采取的某些措施，比如是否抛异常、自定义策略（详情见下文 [7.1.3](#7.1.3、四种内置的拒绝策略)）
 
 
 
 ![image-20251101155400992](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251101155400992.png)
 
-### 7.1.2、四种内置的拒绝策略
+
+
+### 7.1.2、如何设置线程池参数
+
+`corePoolSize`：这个是最重要的参数，需要根据实际业务来。
+
+此外还有两种情况
+
+1. CPU密集型：需要进行大量的数据计算、图像处理、音视频处理等吃CPU的操作。
+2. IO密集型：需要进行大量的 读写操作。
+
+可参考 [如何设置线程池的大小](https://cloud.tencent.com/developer/article/1806245)
+
+
+
+### 7.1.3、四种内置的拒绝策略
 
 `ThreadPoolExecutor` 内置有4中拒绝策略
 
@@ -726,7 +741,7 @@ public ThreadPoolExecutor(int corePoolSize,		// 核心线程数
 
    
 
-### 7.1.3、自定义策略
+### 7.1.4、自定义策略
 
 在生产环境中，我们往往需要**记录日志、上报监控、降级处理**等操作。这时可实现自己的 `RejectedExecutionHandler`。
 
@@ -768,7 +783,9 @@ ThreadPoolExecutor executor = new ThreadPoolExecutor(
 );
 ~~~
 
+常见的策略：
 
+- 资源隔离策略：重要的任务一个队列，普通任务一个队列，保证这两个队列互不干扰。
 
 
 
@@ -781,7 +798,7 @@ ThreadPoolExecutor executor = new ThreadPoolExecutor(
 
 
 
-## 7.3、Executors工具类创建线程池
+### 7.2.1、Executors工具类创建线程池
 
 > newCachedThreadPool
 
@@ -826,3 +843,49 @@ public class ThreadPoolDemo {
     }
 }
 ```
+
+
+
+## 7.3、线程池的工作机制图解
+
+1. 刚开始，没有任何的线程和任务。
+
+   ![1762143842](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/1762143842.png)
+
+2. 来了一个任务，当前线程还未达到 `corePoolSize`，就让一个线程直接处理这个任务。
+
+   ![image-20251103145507868](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251103145507868.png)
+
+3. 又有新的任务，但是当前线程数以达到 `corePoolSize = 2`，就会把新的任务放到任务队列中，而不是再加入新的线程。
+
+   ![image-20251103145910611](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251103145910611.png)
+
+4. 直至当前的任务队列`workQueue`被填满(假设 `workQueue.size `= 3)，就新增线程并取出队列中的任务进行处理(`corePoolSize` + 新增的线程 <= `maximumPoolSize`)。后续也是一样的，只有队列满才会新增线程(如果线程池还有位置的话)。
+
+   ![image-20251103151111582](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251103151111582.png)
+
+5. 若当前线程数以达到 `maximumPoolSize(假设为3)`，那么新的任务将会被加入到队列中，直至队列存满。就会调用`RejectedExecutionHandler`(拒绝策略)来处理后续的任务。
+
+   ![image-20251103152655102](C:\Users\93988\AppData\Roaming\Typora\typora-user-images\image-20251103152655102.png)
+
+
+
+> 流程图
+>
+> ![线程池工作流程图](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/线程池工作流程图.png)
+>
+> 
+
+
+
+## 7.4、JUC中常见的任务队列
+
+- `BlockingQueue`接口：阻塞队列的抽象，不接受空元素，当队列已满存元素或队列空取元素会发生阻塞
+- `BlockingDeque`接口：继承了BlockingQueue、Dequeue接口，阻塞双端队列的抽象，不接受空元素，当队列已满存元素或队列空取元素会发生阻塞
+- `ArrayBlockingQueue`：基于数组实现的有界阻塞队列,由于队列的特性所以不适合有双端实现
+- `LinkedBlockingQueue`：基于链表节点的可选有界阻塞队列，SingleThreadPool与FixedThreadPool线程池使用的队列
+- `LinkedBlockingDeque`：基于链表节点的可选有界阻塞双端队列
+- `ScheduledThreadPoolExecutor.DelayedWorkQueue`：ScheduledThreadPoolExecutor类的内部类，ScheduledThreadPool线程池使用的延迟队列，根据任务执行时间排序基于堆的数据结构的延迟队列
+- `DelayQueue`：延迟任务的无限制阻塞队列
+- `SynchronousQueue`：一个没有内部容量的同步队列，每个插入操作必须等待另一个线程进行相应的删除操作，反之亦然。CachedThreadPool线程池使用的队列
+
