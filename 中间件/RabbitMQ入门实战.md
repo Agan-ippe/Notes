@@ -105,6 +105,17 @@
 
 
 
+### 头交换机
+
+头交换机使用消息属性来进行消息的分发，通过判断消息头的值能否与指定的绑定相匹配来确立路由规则。在头交换机里有一个特别的参数”x-match”，当”x-match”的值为“any”时，只需要消息头的任意一个值匹配成功即可，
+当”x-match”值为“all”时，要求消息头的所有值都需相等才可匹配成功。
+
+![image-20251209175726898](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251209175726898.png)
+
+*头交换机并不常用*
+
+
+
 ## 绑定
 
 绑定也可以叫路由。
@@ -120,10 +131,6 @@ channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "绑定规则");
 // 路由键
 Queue.BindOk queueBind(String queue, String exchange, String routingKey) throws IOException;
 ~~~
-
-
-
-
 
 
 
@@ -879,3 +886,490 @@ public class TopicConsumer1 {
 > 消费者
 
 ![image-20251208223728596](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251208223728596.png)
+
+
+
+# 消息过期机制
+
+官方文档：[生存时间 (TTL) 和过期 | RabbitMQ 消息队列](https://rabbitmq.org.cn/docs/ttl#queue-ttl)
+
+
+
+## 什么是消息过期机制
+
+消息过期机制也称 TTL，TTL 指定了消息和队列的**有效期**，消息超时未被消费，则会被丢弃或放入[死信队列](#死信队列)。
+
+TTL 的设置可以非常灵活，你既可以**为整个队列设置一个统一的过期时间**，也可以**为单条消息设置独立的过期时间**。
+
+
+
+## TTL的作用
+
+消息过期机制在实际应用中非常有用，主要解决以下几类问题：
+
+1. 防止消息堆积：对于包含时效性数据的系统（如订单超时未支付、限时优惠活动），可以确保过期的订单或活动信息不会无限期地留在队列中占用资源。
+2. 实现延迟任务：这是 TTL 一个非常经典和巧妙的用法。通过结合“死信队列”，可以实现一个功能完善的延迟队列。例如，创建一个没有消费者的队列，并为其设置 TTL 和死信交换机。消息进入该队列后，等待 TTL 时间后过期，然后被路由到死信交换机，最后由绑定在死信交换机上的消费者来处理，从而实现了延迟执行的效果。
+3. 保证数据新鲜度：对于一些实时性要求很高的场景（如实时路况、股票行情），旧的消息很快就会失去价值。设置 TTL 可以自动清理这些过时的数据，确保消费者处理到的都是最新的信息。
+4. 系统容错与重试：在复杂的任务处理流程中，如果一条消息因为某种原因长时间未被处理，可能意味着下游系统出现了问题。通过 TTL 可以将这些“僵尸”消息自动移除，并触发告警或进入人工干预流程。
+
+
+
+## 如何使用
+
+使用方法分为两个
+
+1. 为队列设置
+2. 为消息单独设置
+
+
+
+### 为队列设置TTL
+
+~~~Java
+// 创建一个Map来存放队列参数
+Map<String, Object> argsMap = new HashMap<>();
+// 设置队列的TTL为10000毫秒（10秒）
+argsMap.put("x-message-ttl", 10000);
+// 声明队列，并传入参数
+channel.queueDeclare(QUEUE_NAME, true, false, false, argsMap);
+~~~
+
+说明：
+
+- 所有发送到队列的消息，如果在 10 秒内没有被消费，都会自动过期。
+- 如果将 `x-message-ttl` 设置为 `0`，表示只要消息一进入队列，如果不能立即被消费者获取，就会立即过期（除非有消费者正在等待）。
+
+> demo
+
+```Java
+public class QueueTtlProducer {
+
+    private final static String QUEUE_NAME = "queue_ttl_demo";
+
+    public static void main(String[] argv) throws Exception {
+        // 创建一个连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        // 主机地址
+        factory.setHost("localhost");
+        // 创建一个连接
+        try (Connection connection = factory.newConnection();
+             // 创建一个信道
+             Channel channel = connection.createChannel()) {
+
+            // 创建队列，设置消息在队列中最多存活10秒
+            Map<String, Object> args = new HashMap<>();
+            args.put("x-message-ttl", 10000); // 10秒TTL
+            channel.queueDeclare(QUEUE_NAME, false, false, false, args);
+
+            System.out.println("队列TTL生产者已启动，输入消息并发送（输入'exit'退出）：");
+            System.out.println("队列中的所有消息将在10秒后过期");
+
+            Scanner scanner = new Scanner(System.in);
+            while (scanner.hasNext()) {
+                String input = scanner.nextLine();
+                if ("exit".equalsIgnoreCase(input)) {
+                    break;
+                }
+
+                String message = input + " - 将在10秒后过期";
+                channel.basicPublish("", QUEUE_NAME, null, message.getBytes(StandardCharsets.UTF_8));
+                System.out.println(" [x] 发送消息: '" + message + "'");
+            }
+
+            System.out.println("队列TTL生产者已关闭");
+        }
+    }
+}
+```
+
+```Java
+public class QueueTtlConsumer {
+
+    private final static String QUEUE_NAME = "queue_ttl_demo";
+
+    public static void main(String[] argv) throws Exception {
+        // 创建一个连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        System.out.println(" [*] 等待消息。要退出请按 CTRL+C");
+        System.out.println("队列TTL说明：此队列中的所有消息将在10秒后过期");
+        System.out.println("如果您在消息过期前启动消费者，可以正常接收消息");
+        System.out.println("如果您在消息过期后才启动消费者，将无法接收已过期的消息");
+
+        // 创建消费者回调
+        DeliverCallback callback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            System.out.println(" [x] 接收到消息 '" + message + "'");
+        };
+        // 开始消费消息
+        channel.basicConsume(QUEUE_NAME, true, callback, consumerTag -> {});
+    }
+}
+```
+
+![image-20251209205851528](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251209205851528.png)
+
+---
+
+
+
+### 为消息单独设置TTL
+
+~~~Java
+// 创建BasicProperties对象来设置消息属性
+AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
+        .expiration("5000") // 设置消息的TTL为5000毫秒（5秒）
+        .build();
+// 发送消息，并传入properties
+channel.basicPublish("", QUEUE_NAME, properties, message.getBytes());
+~~~
+
+说明：
+
+- 即使没有设置队列级别的 TTL，这条消息也会在 5 秒后过期。
+- 如果队列也设置了 TTL（比如 10 秒），那么这条消息的实际过期时间是 5 秒（取两者中的较小值）。
+
+---
+
+> 生产者demo
+
+```Java
+public class MessageTtlProducer {
+
+    private final static String QUEUE_NAME = "message_ttl_demo";
+
+    public static void main(String[] argv) throws Exception {
+        // 创建一个连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        // 主机地址
+        factory.setHost("localhost");
+        // 创建一个连接
+        try (Connection connection = factory.newConnection();
+             // 创建一个信道
+             Channel channel = connection.createChannel()) {
+            // 创建普通队列，不设置队列TTL
+            channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("消息TTL生产者已启动，输入消息发送（输入'exit'退出）:");
+            while (scanner.hasNext()) {
+                String message = scanner.nextLine();
+                if ("exit".equalsIgnoreCase(message)) {
+                    break;
+                }
+                // 发送带有TTL的消息（10秒过期）
+                AMQP.BasicProperties ttlProperties = new AMQP.BasicProperties.Builder()
+                        // 10秒TTL
+                        .expiration("10000")
+                        .build();
+                channel.basicPublish("", QUEUE_NAME, ttlProperties, message.getBytes(StandardCharsets.UTF_8));
+                System.out.println(" [x] 发送带有TTL的消息: '" + message + "'");
+            }
+            System.out.println("消息TTL生产者已关闭");
+        }
+    }
+}
+```
+
+<font color="red">在到期后未被消费的消息被丢弃</font>
+
+![image-20251209204736986](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251209204736986.png)
+
+---
+
+### 重要区别：队列TTL vs. 消息TTL
+
+这是一个非常关键且容易混淆的点：
+
+1. **队列 TTL (`x-message-ttl`)**：
+   - **过期时机**：只有当消息处于**队列头部**（即即将被消费者消费）时，RabbitMQ 才会检查它是否过期。
+   - **影响**：如果队列因为消息积压，导致一条设置了 5 秒 TTL 的消息在 10 秒后才到达队首，那么它在第 10 秒才会被判定为过期并移除。**它的实际存活时间可能远大于设定的 TTL**。
+2. **消息 TTL (`expiration`)**：
+   - **过期时机**：无论消息在队列的哪个位置，RabbitMQ 都会确保它在设定的 TTL 时间后被移除。
+   - **影响**：一条设置了 5 秒 TTL 的消息，无论队列积压多严重，它都一定会在进入队列后的 5 秒左右被移除。
+
+**结论**：如果你需要**精确控制每条消息的生命周期**，请务必使用**消息级别的 TTL**。如果只是对队列中的消息有一个大致的存活时间要求，使用队列级别的 TTL 即可。
+
+
+
+# 死信队列
+
+死信是指那些无法被正常处理的消息，包括过期的消息、被拒绝的消息、处理失败的消息、队列已满无法存储的消息。这些消息没有得到正确的响应，遗落在邮箱底的邮件，没有得到妥善的处理。
+
+为了处理这些失败的消息，引入了死信队列的概念
+
+**死信队列** 是专门用来处理死信的队列（本质上就是一个普通队列），其保证消息的可靠性，确保每条消息都能被成功消费而提供的一种容错机制。
+
+**死信交换机**：用于将死信消息转发到死信队列的交换机，也可以设置路由绑定来确认消息的路由规则（和普通的交换机用法无二）
+
+
+
+![image-20251211210404513](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251211210404513.png)
+
+## 相关配置
+
+```Java
+// 设置正常队列的参数，指定死信交换机和路由键
+Map<String, Object> args = new HashMap<>();
+// 设置死信交换机
+args.put("x-dead-letter-exchange", DLX_EXCHANGE);
+// 设置死信路由键
+args.put("x-dead-letter-routing-key", DLX_ROUTING_KEY);
+// 设置队列的最大长度（用于演示队列已满的情况）
+args.put("x-max-length", 5);
+// 设置消息的TTL（Time To Live）为20秒（用于演示消息过期的情况）
+args.put("x-message-ttl", 20000);
+// 将拒绝的消息放入死信队列
+args.put("x-overflow", "reject-publish-dlx");
+
+// 声明正常队列，并传入死信参数
+channel.queueDeclare(NORMAL_QUEUE, false, false, false, args);
+```
+
+
+
+> 特别注意
+
+在队列满的情况下，如果需要将新的消息放入死信队列，需要将 `x-overflow` 配置为 `reject-publish-dlx`。
+
+该参数的默认配置是 **删除头部**，会将最早的消息放入死信队列。
+
+而 `reject-publish` 参数会拒绝新消息
+
+~~~java
+// 将拒绝的新消息放入死信队列
+args.put("x-overflow", "reject-publish-dlx");
+// 拒绝新消息
+args.put("x-overflow", "reject-publish");
+~~~
+
+
+
+## 死信队列demo
+
+案例结构
+
+![image-20251212214223418](https://raw.githubusercontent.com/Agan-ippe/typora_pic/main/imgs/image-20251212214223418.png)
+
+<font color="red">使用须知</font>
+
+两个生产者选择你需要的运行一个即可，然后同时运行消费者 [idea启动两个main方法](https://blog.csdn.net/wgq3773/article/details/115449197)
+
+
+
+### DlxConfig
+
+```Java
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class DlxConfig {
+    // 正常交换机和队列
+    public static final String NORMAL_EXCHANGE = "normal_exchange";
+    public static final String NORMAL_QUEUE = "normal_queue";
+
+    // 死信交换机和队列
+    public static final String DLX_EXCHANGE = "dlx_exchange";
+    public static final String DLX_QUEUE = "dlx_queue";
+
+    // 路由键
+    public static final String NORMAL_ROUTING_KEY = "normal";
+    public static final String DLX_ROUTING_KEY = "dlx";
+
+    /**
+     * 设置死信队列
+     */
+    public static void setupDlxQueue() throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+            // 声明死信交换机
+            channel.exchangeDeclare(DLX_EXCHANGE, "direct");
+            // 声明死信队列
+            channel.queueDeclare(DLX_QUEUE, false, false, false, null);
+
+            // 绑定死信队列到死信交换机
+            channel.queueBind(DLX_QUEUE, DLX_EXCHANGE, DLX_ROUTING_KEY);
+
+            // 声明正常交换机
+            channel.exchangeDeclare(NORMAL_EXCHANGE, "direct");
+
+            // 设置正常队列的参数，指定死信交换机和路由键
+            Map<String, Object> args = new HashMap<>();
+            // 设置死信交换机
+            args.put("x-dead-letter-exchange", DLX_EXCHANGE);
+            // 设置死信路由键
+            args.put("x-dead-letter-routing-key", DLX_ROUTING_KEY);
+            // 设置队列的最大长度（用于演示队列已满的情况）
+            args.put("x-max-length", 5);
+            // 设置消息的TTL（Time To Live）为20秒（用于演示消息过期的情况）
+            args.put("x-message-ttl", 20000);
+            
+            //TODO 以下两个配置可以试一下，都注释，默认的策略就是删除头部（移除最早的消息）
+            
+            // 将拒绝的消息放入死信队列，同一参数，选择一个配置即可
+//            args.put("x-overflow", "reject-publish-dlx");
+            // 拒绝新的消息，而不会放入死信队列，同一参数，选择一个配置即可
+//            args.put("x-overflow", "reject-publish");
+            
+            
+            // 声明正常队列，并传入死信参数
+            channel.queueDeclare(NORMAL_QUEUE, false, false, false, args);
+            // 绑定正常队列到正常交换机
+            channel.queueBind(NORMAL_QUEUE, NORMAL_EXCHANGE, NORMAL_ROUTING_KEY);
+            System.out.println("死信队列设置完成！");
+        }
+    }
+}
+```
+
+
+
+### DlxConsumer
+
+死信队列消费者示例代码
+
+```Java
+import com.rabbitmq.client.*;
+
+
+/**
+ * @Author <a href="https://github.com/Agan-ippe">知莫</a>
+ * @Date 2025/12/06   21:47
+ * @Version 1.0
+ * @Description 死信队列消费者 - 处理死信消息
+ */
+public class DlxConsumer {
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        System.out.println("死信队列消费者已启动，等待死信消息...");
+
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), "UTF-8");
+            System.out.println(" [x] Received '" +
+                    delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
+        };
+
+        channel.basicConsume(DlxConfig.DLX_QUEUE, true, deliverCallback, consumerTag -> { });
+    }
+}
+```
+
+
+
+### DlxRejectProducer
+
+直接拒绝消息,生产者示例
+
+```Java
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
+
+import java.util.Scanner;
+
+/**
+ * @Author <a href="https://github.com/Agan-ippe">知莫</a>
+ * @Date 2025/12/06   21:47
+ * @Version 1.0
+ * @Description 死信队列生产者
+ */
+public class DlxRejectProducer {
+    public static void main(String[] argv) throws Exception {
+        // 首先设置死信队列
+        DlxConfig.setupDlxQueue();
+
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                // 拒绝消息
+                channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+                System.out.println(" [x] Received '" +
+                        delivery.getEnvelope().getRoutingKey() + "':'" + message + "'");
+            };
+
+            channel.basicConsume(DlxConfig.NORMAL_QUEUE, false, deliverCallback, consumerTag -> {
+            });
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("死信队列生产者已启动，请输入消息：");
+            while (scanner.hasNext()) {
+                String message = scanner.nextLine();
+                // 消息持久化
+                channel.basicPublish(DlxConfig.NORMAL_EXCHANGE,
+                        DlxConfig.NORMAL_ROUTING_KEY,
+                        null,
+                        message.getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message + "' with routing '" + DlxConfig.NORMAL_ROUTING_KEY + "'");
+            }
+        }
+    }
+}
+```
+
+
+
+### DlxTtlProducer
+
+测试消息过期、队列已满的情况下，消息入死信的 生产者示例代码
+
+```Java
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
+
+import java.util.Scanner;
+
+/**
+ * @Author <a href="https://github.com/Agan-ippe">知莫</a>
+ * @Date 2025/12/06   21:47
+ * @Version 1.0
+ * @Description 死信队列生产者
+ */
+public class DlxTtlProducer {
+    public static void main(String[] argv) throws Exception {
+        // 首先设置死信队列
+        DlxConfig.setupDlxQueue();
+
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("死信队列生产者已启动，请输入消息：");
+            while (scanner.hasNext()) {
+                String message = scanner.nextLine();
+                // 消息持久化
+                channel.basicPublish(DlxConfig.NORMAL_EXCHANGE,
+                        DlxConfig.NORMAL_ROUTING_KEY,
+                        null,
+                        message.getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message + "' with routing '" + DlxConfig.NORMAL_ROUTING_KEY+ "'");
+            }
+        }
+    }
+}
+```
