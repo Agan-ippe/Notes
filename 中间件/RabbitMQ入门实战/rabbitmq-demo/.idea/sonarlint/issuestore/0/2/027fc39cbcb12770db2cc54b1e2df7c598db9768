@@ -1,0 +1,13 @@
+
+†	java:S112 "FDefine and throw a dedicated exception instead of using a generic one.(Ò‚ÒéüÿÿÿÿJ$9e25eae0-7987-4dd4-995c-24309582b03e
+†
+java:S2095"EUse try-with-resources or close this "Channel" in a "finally" clause.(òŠ°íşÿÿÿÿJ$acd97aee-930f-4e01-bde8-00f09c99e1b1
+„
+java:S2095"HUse try-with-resources or close this "Connection" in a "finally" clause.(ëæ–J$1b2f20f3-540a-47f1-89fc-414336ac823e
+f	java:S106"+Replace this use of System.out by a logger.(æĞJ$07a5785e-0189-4a06-9419-4381a5a93ffe
+z
+java:S4719"9Replace charset name argument with StandardCharsets.UTF_8(åıÙÆûÿÿÿÿJ$d2494ce9-c684-43e8-a9e6-8cb5a6cc1bd8
+f	java:S106"+Replace this use of System.out by a logger.(×™ÛóJ$9e415340-5013-4a29-90c3-db9070736994
+š
+java:S2142"^Either re-interrupt this method or rethrow the "InterruptedException" that can be caught here.(ä ¹€J$e1f25715-156a-496d-8c80-5c7e79d24fdb
+k	java:S106""+Replace this use of System.out by a logger.(Ê¿ù£úÿÿÿÿJ$9d138892-1202-4799-aa0d-d8fd64c165de

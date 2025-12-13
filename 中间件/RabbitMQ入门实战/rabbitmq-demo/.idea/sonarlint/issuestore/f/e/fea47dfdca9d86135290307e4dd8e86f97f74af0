@@ -1,0 +1,12 @@
+
+\
+java:S1192*"FDefine a constant instead of duplicating this literal "UTF-8" 3 times.(ôáß«
+d
+java:S1192"IDefine a constant instead of duplicating this literal "category" 3 times.(‘—¿êşÿÿÿÿ
+O
+java:S4719*"9Replace charset name argument with StandardCharsets.UTF_8(ôáß«
+O
+java:S47191"9Replace charset name argument with StandardCharsets.UTF_8(ıÙãŠ
+O
+java:S47198"9Replace charset name argument with StandardCharsets.UTF_8(«Íó¤
+E	java:S106:"+Replace this use of System.out by a logger.(ò†Í‰ûÿÿÿÿ

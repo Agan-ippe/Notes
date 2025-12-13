@@ -1,0 +1,10 @@
+
+¡	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(Ğ‚†‰ùÿÿÿÿ8•ÒÓ”±3J$3e6d3701-5525-4493-944f-0c6b896e65da
+‹
+java:S2095"HUse try-with-resources or close this "Connection" in a "finally" clause.(“…§Ú8™ÒÓ”±3J$b241f488-6147-4ae7-897d-1ba5d2d6030e
+
+java:S2095"EUse try-with-resources or close this "Channel" in a "finally" clause.(‡î‰´ûÿÿÿÿ8™ÒÓ”±3J$42a24b92-52f9-4219-aed5-32d67df61cdb
+r	java:S106"+Replace this use of System.out by a logger.(Ï¸£øşÿÿÿÿ8 ÒÓ”±3J$d834b68d-7c1d-4c76-8583-75a346e30936
+
+java:S4719"9Replace charset name argument with StandardCharsets.UTF_8(åıÙÆûÿÿÿÿ8¡ÒÓ”±3J$1201a4a5-5b79-4411-aacc-45d2b89a66b2
+r	java:S106"+Replace this use of System.out by a logger.(¼ª¬¾úÿÿÿÿ8¢ÒÓ”±3J$89a1e7dd-5707-4c5b-869f-34b403b7e376

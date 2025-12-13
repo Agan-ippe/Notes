@@ -1,0 +1,12 @@
+
+†
+java:S2095"EUse try-with-resources or close this "Channel" in a "finally" clause.(‡î‰´ûÿÿÿÿJ$7b6c760e-f9d0-4f15-83d9-5b75b07c2812
+„
+java:S2095"HUse try-with-resources or close this "Connection" in a "finally" clause.(“…§ÚJ$40c921e3-1839-4f7b-af07-145c33b768c9
+
+java:S1124"EReorder the modifiers to comply with the Java Language Specification.(µ¡®ùJ$5a2801b3-5c0f-4702-9a34-3849cf599a4d
+f	java:S106"+Replace this use of System.out by a logger.(¬Ñ§¢J$2be3d2a3-4a70-4bb7-8112-8fd040705d51
+f	java:S106"+Replace this use of System.out by a logger.(áÍèÒJ$0247fad7-2042-4431-9703-3f57d971effb
+k	java:S106"+Replace this use of System.out by a logger.(Ş´ïŠøÿÿÿÿJ$d4ab9a43-e33c-495f-b89f-e9e58b844b3d
+f	java:S106"+Replace this use of System.out by a logger.(ã¿áïJ$c8d366d6-8fe1-4fe5-851f-626bb308135f
+f	java:S106!"+Replace this use of System.out by a logger.(ù‰ŠJ$8c4a8d57-41b1-4918-8112-c09387dccb2d

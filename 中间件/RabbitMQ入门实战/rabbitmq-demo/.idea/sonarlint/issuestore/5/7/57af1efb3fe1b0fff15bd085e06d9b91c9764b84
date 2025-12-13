@@ -1,0 +1,10 @@
+
+“
+java:S1192"PUse already-defined constant 'QUEUE_NAME' instead of duplicating its value here.(Äæá˜8¶µßÊ¯3J$58938b34-bc16-412b-b3cd-26dc141da4ef
+
+java:S2095"EUse try-with-resources or close this "Channel" in a "finally" clause.(‡î‰´ûÿÿÿÿ8ÁµßÊ¯3J$a6b1c4ac-4975-433a-82e0-71709bb1a1b0
+‹
+java:S2095"HUse try-with-resources or close this "Connection" in a "finally" clause.(“…§Ú8ÂµßÊ¯3J$aae34047-fa37-4837-97a8-7013e1a843b4
+
+java:S4719"9Replace charset name argument with StandardCharsets.UTF_8(åıÙÆûÿÿÿÿ8ÍµßÊ¯3J$1c588467-130a-4d10-a461-6d0f9684c74f
+r	java:S106"+Replace this use of System.out by a logger.(ş®•æıÿÿÿÿ8ÙÃÅç¯3J$51707768-e215-4b46-832e-a448ac26617d

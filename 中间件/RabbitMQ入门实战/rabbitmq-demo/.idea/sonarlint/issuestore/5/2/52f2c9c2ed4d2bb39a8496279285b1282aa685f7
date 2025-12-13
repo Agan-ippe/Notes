@@ -1,0 +1,9 @@
+
+‹
+java:S2095"HUse try-with-resources or close this "Connection" in a "finally" clause.(“…§Ú8ˆ’Ó”¯3J$6f8b5478-42e1-4c35-8295-a15f55c3dd50
+
+java:S2095"EUse try-with-resources or close this "Channel" in a "finally" clause.(‡î‰´ûÿÿÿÿ8ˆ’Ó”¯3J$5f9c6634-f309-4baa-9023-28bd61b66ed9
+m	java:S106"+Replace this use of System.out by a logger.(æĞ8´’Ó”¯3J$bdd5c988-49b6-4e9b-90fc-747d553cc619
+
+java:S4719""9Replace charset name argument with StandardCharsets.UTF_8(åıÙÆûÿÿÿÿ8º’Ó”¯3J$a7263d16-9010-4eb2-bb14-0ef7535c9aaf
+r	java:S106#"+Replace this use of System.out by a logger.(ïí÷ÿÿÿÿÿ8¼’Ó”¯3J$78c8ba0b-b45e-464d-9f64-3dbeb4bc1938

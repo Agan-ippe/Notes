@@ -1,0 +1,21 @@
+
+
+java:S1192%"MDefine a constant instead of duplicating this literal "] Received '" 3 times.(óÎÁÙ8®ü©ò¯3J$9dfd5e76-9814-4074-8531-6e6d9710beae
+
+java:S1192$"FDefine a constant instead of duplicating this literal "UTF-8" 3 times.(åıÙÆûÿÿÿÿ8õƒîé¯3J$5f66c4c4-ce3d-4b34-bc0a-dd84c6a97799
+
+java:S1192"FDefine a constant instead of duplicating this literal "topic" 3 times.(öáÙ¤øÿÿÿÿ8Ğßæé¯3J$6c3a1c97-5ec0-48fc-bcf5-477f0fc5de11
+‹
+java:S2095"HUse try-with-resources or close this "Connection" in a "finally" clause.(“…§Ú8Óæ£ò¯3J$c8b617cd-e88f-4040-8127-d7a8f206d28c
+
+java:S2095"EUse try-with-resources or close this "Channel" in a "finally" clause.(‡î‰´ûÿÿÿÿ8Óæ£ò¯3J$8ef560ab-6a89-47a4-9e70-d5ec5cad2ba8
+m	java:S106!"+Replace this use of System.out by a logger.(æĞ8ÉÖé¯3J$4d47c01a-c83f-46f6-827b-dcc7de557fe6
+
+java:S4719$"9Replace charset name argument with StandardCharsets.UTF_8(åıÙÆûÿÿÿÿ8’ÉÖé¯3J$b88f7194-977b-4667-a491-1eeed1e7a505
+m	java:S106%"+Replace this use of System.out by a logger.(óÎÁÙ8’ÉÖé¯3J$d0165502-415d-4e36-9e26-9245dcc8bd4b
+
+java:S4719*"9Replace charset name argument with StandardCharsets.UTF_8(åıÙÆûÿÿÿÿ8œ„îé¯3J$296c0185-c13f-4f91-9fdf-f21bdbdf6f6b
+m	java:S106+"+Replace this use of System.out by a logger.(ëú§œ8œ„îé¯3J$689bbfb8-af9f-42d9-be3c-d7e702b4e811
+
+java:S47190"9Replace charset name argument with StandardCharsets.UTF_8(åıÙÆûÿÿÿÿ8„îé¯3J$cd66667f-c200-4331-8af7-014c05816fce
+m	java:S1061"+Replace this use of System.out by a logger.(ü°“8„îé¯3J$95fcd3bf-2605-4254-9a85-25f047698063

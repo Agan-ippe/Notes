@@ -1,0 +1,8 @@
+
+¡	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(Ğ‚†‰ùÿÿÿÿ8¦ôã”±3J$5a7a896e-6570-4440-bddf-04e0d93b9fd5
+m	java:S106"+Replace this use of System.out by a logger.(³¿µ–8¶ôã”±3J$104b8463-c1a7-4ee7-86e2-d3bc30917649
+
+java:S4719$"9Replace charset name argument with StandardCharsets.UTF_8(é¶îÔøÿÿÿÿ8·ôã”±3J$dd95bc2c-c514-4f0f-8c0c-20f71de3fc78
+r	java:S106%"+Replace this use of System.out by a logger.(ñçÒ©úÿÿÿÿ8·ôã”±3J$a002a28a-0f31-472f-aad9-48f7ba6b8720
+ˆ
+java:S1128"@Remove this unused import 'com.rabbitmq.client.DeliverCallback'.(À²ğ»ûÿÿÿÿ8©ò”±3J$cb64d2d9-b293-48ec-87df-2328a09e8fb6
