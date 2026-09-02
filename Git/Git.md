@@ -61,3 +61,42 @@
 | build    | 改构建系统或者修改依赖         |
 | revert   | 回滚某个提交                   |
 
+
+
+# Git提交流程
+
+在开始代码提交之前，我们需要确保本地代码是最新的。这可以通过`git pull`命令来实现，以避免代码冲突。
+
+~~~bash
+git pull origin master --rebase
+~~~
+
+
+
+~~~bash
+# 添加所有更改的文件到暂存区
+git add .
+# 或者只添加指定文件
+git add temp.txt
+
+# 查看状态
+git status
+# 取消暂存
+git reset HEAD <file>
+
+#执行提交
+git commit -m "xxx"
+
+# 跳过暂存区直接提交，会提交所有已跟踪的修改
+git commit -a -m "xxx"
+
+# 修正上一次的提交信息
+git commit --amend -m "修正后的提交信息"
+
+# 推送到远程仓库的master分支
+git push origin master
+# 通常情况下，可以省略远程分支名，直接使用
+git push
+
+~~~
+
