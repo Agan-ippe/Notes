@@ -1,3 +1,5 @@
+# 前端解决方案
+
 ~~~
 yarn add json-bigint
 ~~~
@@ -28,3 +30,31 @@ import axios from 'axios';
 
    export default myAxios;
 ~~~
+
+
+
+# 后端解决方案
+
+在SpringBoot中创建一个JSON配置类，自定义序列化规则，将Long类型的数据自动转换为字符串
+
+```Java
+/**
+ * Spring MVC Json 配置
+ */
+@JsonComponent
+public class JsonConfig {
+
+    /**
+     * 添加 Long 转 json 精度丢失的配置
+     */
+    @Bean
+    public ObjectMapper jacksonObjectMapper(Jackson2ObjectMapperBuilder builder) {
+        ObjectMapper objectMapper = builder.createXmlMapper(false).build();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Long.class, ToStringSerializer.instance);
+        module.addSerializer(Long.TYPE, ToStringSerializer.instance);
+        objectMapper.registerModule(module);
+        return objectMapper;
+    }
+}
+```
